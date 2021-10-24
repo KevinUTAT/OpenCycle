@@ -38,9 +38,9 @@ _ADV_DIRECT_IND = const(0x01)
 _ADV_SCAN_IND = const(0x02)
 _ADV_NONCONN_IND = const(0x03)
 
-# org.bluetooth.service.environmental_sensing
+
 _CSC_SENSE_UUID = bluetooth.UUID(0x1816)
-# org.bluetooth.characteristic.temperature
+
 _CSC_UUID = bluetooth.UUID(0x2a5b)
 _CONF_UUID = bluetooth.UUID(0x2902)
 _TEMP_CHAR = (
@@ -52,11 +52,9 @@ _ENV_SENSE_SERVICE = (
     (_TEMP_CHAR,),
 )
 
-# org.bluetooth.characteristic.gap.appearance.xml
-_ADV_APPEARANCE_GENERIC_THERMOMETER = const(768)
 
 
-class BLETemperatureCentral:
+class BLECSCCentral:
     def __init__(self, ble):
         self._ble = ble
         self._ble.active(True)
@@ -249,7 +247,7 @@ def on_receive_csc(csc_data):
 
 def demo():
     ble = bluetooth.BLE()
-    central = BLETemperatureCentral(ble)
+    central = BLECSCCentral(ble)
 
     not_found = False
 
@@ -284,6 +282,42 @@ def demo():
 #     while central.is_connected():
 #         print(central.value())
 #         time.sleep_ms(2000)
+
+    print("Disconnected")
+
+
+def run_CSC(data_callback):
+    ble = bluetooth.BLE()
+    central = BLECSCCentral(ble)
+
+    not_found = False
+
+    def on_scan(addr_type, addr, name):
+        if addr_type is not None:
+            print("Found sensor:", addr_type, addr, name)
+            central.connect()
+        else:
+            nonlocal not_found
+            not_found = True
+            print("No sensor found.")
+
+    central.scan(callback=on_scan)
+
+    # Wait for connection...
+    while not central.is_connected():
+        time.sleep_ms(100)
+        if not_found:
+            return
+
+    print("Connected")
+    time.sleep(2)
+    central.on_notify(data_callback)
+    central.enable_notification()
+
+    # Explicitly issue reads, using "print" as the callback.
+    while central.is_connected():
+#         central.read(callback=print)
+        time.sleep_ms(2000)
 
     print("Disconnected")
 
