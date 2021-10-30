@@ -43,14 +43,14 @@ _CSC_SENSE_UUID = bluetooth.UUID(0x1816)
 
 _CSC_UUID = bluetooth.UUID(0x2a5b)
 _CONF_UUID = bluetooth.UUID(0x2902)
-_TEMP_CHAR = (
-    _CSC_UUID,
-    bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY,
-)
-_ENV_SENSE_SERVICE = (
-    _CSC_SENSE_UUID,
-    (_TEMP_CHAR,),
-)
+# _TEMP_CHAR = (
+#     _CSC_UUID,
+#     bluetooth.FLAG_READ | bluetooth.FLAG_NOTIFY,
+# )
+# _ENV_SENSE_SERVICE = (
+#     _CSC_SENSE_UUID,
+#     (_TEMP_CHAR,),
+# )
 
 
 
@@ -241,7 +241,7 @@ class BLECSCCentral:
     def enable_notification(self):
         self._ble.gattc_write(self._conn_handle, self._dsc_handle, struct.pack('h', 0x0001))
 
-def on_receive_csc(csc_data):
+def on_receive_csc_print(csc_data):
     print("Wheel Rev:", csc_data[1])
     print("Since last:", csc_data[2], "ms")
 
@@ -270,7 +270,7 @@ def demo():
 
     print("Connected")
     time.sleep(2)
-    central.on_notify(on_receive_csc)
+    central.on_notify(on_receive_csc_print)
     central.enable_notification()
 
     # Explicitly issue reads, using "print" as the callback.
@@ -286,6 +286,7 @@ def demo():
     print("Disconnected")
 
 
+# notify data: [status, wheelRev, lastUpdate]
 def run_CSC(data_callback):
     ble = bluetooth.BLE()
     central = BLECSCCentral(ble)
