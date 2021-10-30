@@ -12,8 +12,17 @@ display = ssd1306.SSD1306_I2C(128, 64, i2c)
 wheelRev = 0
 lastUpdate = 0
 
+def display_msg(title, msg0="", msg1="", msg2=""):
+    display.fill(0)  
+    display.text('OpenCycle', 0, 0, 1)
+    display.text(title, 0, 20, 1)
+    display.text(msg0, 0, 30, 1)
+    display.text(msg1, 0, 40, 1)
+    display.text(msg2, 0, 50, 1)
+    display.show()
+
 def run_display(raw_data, rpm):
-    display.fill_rect(0,0,127,63,0)  
+    display.fill(0)  
     display.text('OpenCycle', 0, 0, 1)
     display.text('Wheel Rev: ', 0, 20, 1)
     display.text(str(raw_data[1]), 80, 20, 1)
@@ -54,9 +63,9 @@ def on_receive_CSC(csc_data):
     
 def run_openCycle(on_display=True):
     if on_display:
-        run_CSC(on_receive_CSC)
+        run_CSC(on_receive_CSC, display_msg)
     else:
         run_CSC(print_data)
 
 if __name__ == "__main__":
-    run_CSC(on_receive_CSC)
+    run_CSC(on_receive_CSC, display_msg)

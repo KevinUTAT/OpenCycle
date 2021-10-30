@@ -55,10 +55,11 @@ _CONF_UUID = bluetooth.UUID(0x2902)
 
 
 class BLECSCCentral:
-    def __init__(self, ble):
+    def __init__(self, ble, msg_callback=None):
         self._ble = ble
         self._ble.active(True)
         self._ble.irq(self._irq)
+        self._show_msg = msg_callback
 
         self._reset()
 
@@ -91,6 +92,8 @@ class BLECSCCentral:
     def _irq(self, event, data):
         # print("IRQ:", event, data)
         if event == _IRQ_SCAN_RESULT:
+            if self._show_msg:
+                self._show_msg("Scanning ...")
             addr_type, addr, adv_type, rssi, adv_data = data
             if adv_type in (_ADV_IND, _ADV_DIRECT_IND) and _CSC_SENSE_UUID in decode_services(adv_data):
                 # Found a potential device, remember it and stop scanning.
@@ -125,8 +128,10 @@ class BLECSCCentral:
 
         elif event == _IRQ_GATTC_SERVICE_RESULT:
             # Connected device returned a service.
+            if self._show_msg:
+                self._show_msg("Setting up sensor ...")
             conn_handle, start_handle, end_handle, uuid = data
-            print("service", data)
+#             print("service", data)
             if conn_handle == self._conn_handle and uuid == _CSC_SENSE_UUID:
                 self._start_handle, self._end_handle = start_handle, end_handle
 
@@ -137,9 +142,12 @@ class BLECSCCentral:
                     self._conn_handle, self._start_handle, self._end_handle)
             else:
                 print("Failed to find CSC sensing service.")
+                self._show_msg("Failed to find ", "CSC sensing service.")
 
         elif event == _IRQ_GATTC_CHARACTERISTIC_RESULT:
             # Connected device returned a characteristic.
+            if self._show_msg:
+                self._show_msg("Setting up sensor ...")
             conn_handle, def_handle, value_handle, properties, uuid = data
             # print("characteristic", data)
             if conn_handle == self._conn_handle and uuid == _CSC_UUID:
@@ -156,8 +164,11 @@ class BLECSCCentral:
                     self._conn_callback()
             else:
                 print("Failed to find CSC characteristic.")
+                self._show_msg("Failed to find ", "CSC characteristic.")
                 
         elif event == _IRQ_GATTC_DESCRIPTOR_RESULT:
+            if self._show_msg:
+                self._show_msg("Setting up sensor ...")
             conn_handle, dsc_handle, uuid = data
 #             print(data)
             if conn_handle == self._conn_handle and uuid == _CONF_UUID:
@@ -287,20 +298,22 @@ def demo():
 
 
 # notify data: [status, wheelRev, lastUpdate]
-def run_CSC(data_callback):
+def run_CSC(data_callback, msg_callback):
     ble = bluetooth.BLE()
-    central = BLECSCCentral(ble)
+    central = BLECSCCentral(ble, msg_callback)
 
     not_found = False
 
     def on_scan(addr_type, addr, name):
         if addr_type is not None:
             print("Found sensor:", addr_type, addr, name)
+            msg_callback("Found sensor:", addr, name)
             central.connect()
         else:
             nonlocal not_found
             not_found = True
             print("No sensor found.")
+            msg_callback("No sensor found.")
 
     central.scan(callback=on_scan)
 
@@ -311,6 +324,7 @@ def run_CSC(data_callback):
             return
 
     print("Connected")
+    msg_callback("Connected")
     time.sleep(2)
     central.on_notify(data_callback)
     central.enable_notification()
@@ -321,6 +335,7 @@ def run_CSC(data_callback):
         time.sleep_ms(2000)
 
     print("Disconnected")
+    msg_callback("Disconnected")
 
 
 if __name__ == "__main__":
