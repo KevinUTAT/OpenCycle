@@ -8,6 +8,8 @@ import random
 import struct
 import time
 import micropython
+import sys
+import machine
 
 from ble_advertising import decode_services, decode_name
 
@@ -88,6 +90,9 @@ class BLECSCCentral:
         self._value_handle = None
         self._dsc_handle = None
         self._config_handle = None
+        
+        # timer
+        self._connection_timer = time.time()
 
     def _irq(self, event, data):
         # print("IRQ:", event, data)
@@ -143,6 +148,8 @@ class BLECSCCentral:
             else:
                 print("Failed to find CSC sensing service.")
                 self._show_msg("Failed to find ", "CSC sensing service.")
+                machine.reset()
+                
 
         elif event == _IRQ_GATTC_CHARACTERISTIC_RESULT:
             # Connected device returned a characteristic.
@@ -165,6 +172,7 @@ class BLECSCCentral:
             else:
                 print("Failed to find CSC characteristic.")
                 self._show_msg("Failed to find ", "CSC characteristic.")
+                machine.reset()
                 
         elif event == _IRQ_GATTC_DESCRIPTOR_RESULT:
             if self._show_msg:
@@ -177,6 +185,8 @@ class BLECSCCentral:
         elif event == _IRQ_GATTC_DESCRIPTOR_DONE:
             conn_handle, status = data
 #             print(data)
+            if not self._dsc_handle:
+                machine.reset()
 
         elif event == _IRQ_GATTC_READ_RESULT:
             # A read completed successfully.
@@ -212,6 +222,7 @@ class BLECSCCentral:
 
     # Connect to the specified device (otherwise use cached address from a scan).
     def connect(self, addr_type=None, addr=None, callback=None):
+        self._connection_timer = time.time()
         self._addr_type = addr_type or self._addr_type
         self._addr = addr or self._addr
         self._conn_callback = callback
@@ -314,6 +325,7 @@ def run_CSC(data_callback, msg_callback):
             not_found = True
             print("No sensor found.")
             msg_callback("No sensor found.")
+            machine.reset()
 
     central.scan(callback=on_scan)
 

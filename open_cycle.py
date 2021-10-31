@@ -2,8 +2,8 @@ from bt_csc import BLECSCCentral, run_CSC
 from machine import Pin, I2C
 import ssd1306
 
-MS_IN_MIN = 60000
-SHORT_SIZE = 65536
+MS_IN_MIN = 61440 # Note "ms" here is actually 1/1024 second per Bluetooth spec
+SHORT_SIZE = 65536 
 WHEEL_CIRC = 2155 # mm, for 32-622 (700x32C)
 KPH2MMPM = 16667 # km/h to mm/min
 
