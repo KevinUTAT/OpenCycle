@@ -1,6 +1,7 @@
 from bt_csc import BLECSCCentral, run_CSC
 from machine import Pin, I2C
 import ssd1306
+from display import DebugOled
 
 MS_IN_MIN = 61440 # Note "ms" here is actually 1/1024 second per Bluetooth spec
 SHORT_SIZE = 65536 
@@ -8,8 +9,9 @@ WHEEL_CIRC = 2155 # mm, for 32-622 (700x32C)
 KPH2MMPM = 16667 # km/h to mm/min
 
 # using default address 0x3C
-i2c = I2C(sda=Pin(5), scl=Pin(4))
-display = ssd1306.SSD1306_I2C(128, 64, i2c)
+# i2c = I2C(sda=Pin(5), scl=Pin(4))
+# display = ssd1306.SSD1306_I2C(128, 64, i2c)
+oled_diplay = DebugOled(5, 4)
 
 wheelRev = 0
 lastUpdate = 0
@@ -72,14 +74,15 @@ def on_receive_CSC(csc_data):
     wheelRev = csc_data[1]
     lastUpdate = csc_data[2]
 
-    run_debug_display(csc_data, rpm, speed, dist)
+    oled_diplay.show_csc(speed, dist, rpm, csc_data)
     
     
 def run_openCycle(on_display=True):
     if on_display:
-        run_CSC(on_receive_CSC, display_msg)
+        oled_diplay.init()
+        run_CSC(on_receive_CSC, oled_diplay.show_msg)
     else:
         run_CSC(print_data)
 
 if __name__ == "__main__":
-    run_CSC(on_receive_CSC, display_msg)
+    run_openCycle()
