@@ -1,7 +1,9 @@
 # What is this?
 This project is to create a fully open sourced cycling computer based on micro-controller hardwares such as ESP32 and Pi Pico. \
-This project is still a working progress and are at a very early stage so please forgive me for the current state.\
-![](resource/opencyclev002.png)
+This project is still a working progress and are at a very early stage so please forgive me for the current state.
+|        Oled debug       |        Oled Normal      |
+|:-----------------------:|:-----------------------:|
+|![](resource/screen1.png)|![](resource/screen2.png)|
 # Why Open Cycle?
 Similar project exist on ARM-Linux platforms but I want something that can be run on very miniature hardware while still maintain good battery life. \
 One of the goal for this project is to create a software platform to make it easier to make your own cycling computer with your choices of hardware and interface.\
@@ -21,6 +23,9 @@ If you have a SSD1306 OLED display on I2C, run *open_cycle.run_openCycle*.\
 Or run *open_cycle.run_openCycle(on_display=False)* if you just want data to be printed.\
 You might need to run it more then once to have the bluetooth connection to be connected :(
 # Change log:
+### 2021-11-06:
+Modularize display implementation. Also added new nicer screen with larger speed font.\
+Thanks for the nicer [OLED font library](https://github.com/micropython-Chinese-Community/mpy-lib/tree/master/LED/OLED_I2C_ASC) from MicroPython Chinese community
 ### 2021-10-30:
 Add speed and distance calculation
 ### 2021-10-24:
