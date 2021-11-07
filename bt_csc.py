@@ -318,7 +318,7 @@ def run_CSC(data_callback, msg_callback):
     def on_scan(addr_type, addr, name):
         if addr_type is not None:
             print("Found sensor:", addr_type, addr, name)
-            msg_callback("Found sensor:", addr, name)
+            msg_callback("Found sensor:", str(addr), name)
             central.connect()
         else:
             nonlocal not_found

@@ -1,11 +1,12 @@
 import ssd1306
 from machine import Pin, I2C
 from oled_font.oled import OLED12864_I2C
+from st7789my import ST7789font 
 
 class Display(object):
 
     def __init__(self):
-        pass
+        self.csc_screen = False
 
 
 class OledDisplay(Display):
@@ -14,7 +15,6 @@ class OledDisplay(Display):
         super().__init__()
         self.sda = sda
         self.scl = scl
-        self.csc_screen = False
 
     def init(self):
         self.i2c = I2C(sda=Pin(self.sda), scl=Pin(self.scl))
@@ -83,3 +83,41 @@ class OCOled(OledDisplay):
         self.ssd_display_ascii.text(0, 1, msg0)
         self.ssd_display_ascii.text(0, 2, msg1)
         self.ssd_display_ascii.text(0, 3, msg2)
+
+
+class TDisplay(Display):
+
+    def __init__(self, cs=5, dc=16, bl=4, sck=18, mosi=19):
+        super().__init__()
+        self.BL = Pin(4,Pin.OUT)
+        self.tdisp = ST7789font(None,135,240,reset=None,cs=Pin(5,Pin.OUT),dc=Pin(16,Pin.OUT),backlight=self.BL)
+        
+        
+    def init(self):
+        self.BL.on()
+        self.tdisp.init()
+
+
+class DebugTdisp(TDisplay):
+
+    def __init__(self, cs=5, dc=16, bl=4, sck=18, mosi=19):
+        super().__init__(cs, dc, bl, sck, mosi)
+
+    def show_csc(self, speed, distance, rpm, raw):
+        self.tdisp.writestring("OpenCycle", 0, 0)
+        self.tdisp.writestring("Wheel Rev: ", 0, 10)
+        self.tdisp.writestring(str(raw[1]), 80, 10)
+        self.tdisp.writestring("Time: ", 0, 20)
+        self.tdisp.writestring(str(raw[2]), 50, 20)
+        self.tdisp.writestring("RPM: ", 0, 30)
+        self.tdisp.writestring(str(rpm), 50, 30)
+        self.tdisp.writestring("Speed: ", 0, 40)
+        self.tdisp.writestring(str(speed), 50, 40)
+        self.tdisp.writestring("Distance: ", 0, 50)
+        self.tdisp.writestring(str(distance), 70, 50)
+
+    def show_msg(self, title, msg0="", msg1="", msg2=""):
+        self.tdisp.writestring(title, 0, 0)
+        self.tdisp.writestring(msg0, 0, 10)
+        self.tdisp.writestring(msg1, 0, 20)
+        self.tdisp.writestring(msg2, 0, 30)
