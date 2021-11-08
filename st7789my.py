@@ -84,7 +84,7 @@ def color565(r, g=0, b=0):
 
 class ST77xx:
     def __init__(self, spi, width, height, reset, dc, cs=None, backlight=None,
-                 sck=18, mosi=19, xstart=-1, ystart=-1):
+                 xstart=-1, ystart=-1):
         """
         display = st7789.ST7789(
             SPI(1, baudrate=40000000, phase=0, polarity=1),
@@ -99,7 +99,7 @@ class ST77xx:
         self.spi = spi
         if spi is None:
             import machine
-            self.spi = machine.SPI(1,baudrate=32000000, polarity=1, phase=0, bits=8, firstbit=0, sck=machine.Pin(sck,machine.Pin.OUT),mosi=machine.Pin(mosi,machine.Pin.OUT))
+            self.spi = machine.SPI(1,baudrate=32000000, polarity=1, phase=0, bits=8, firstbit=0, sck=machine.Pin(18,machine.Pin.OUT),mosi=machine.Pin(19,machine.Pin.OUT))
             self.spi.init()
         self.reset = reset
         self.dc = dc
@@ -373,9 +373,10 @@ class ST7789font(ST7789):
           #print("read size",self._font_width,self._font_height)
         self._linebuf=bytearray(2*(self._font_width+1)*(self._font_height+1))
 
-    def writechar(self,ch,x=-1,y=-1,fg=WHITE,bg=BLACK):
+    def writechar(self,ch,x=-1,y=-1,fg=WHITE,bg=BLACK,scale=1):
         cnt=0
-        linebuf=self._linebuf
+        # linebuf=self._linebuf
+        linebuf = bytearray(scale*scale*2*(self._font_width+1)*(self._font_height+1))
         if x < 0 or y < 0:
             x=self.cursx
             y=self.cursy
@@ -384,21 +385,23 @@ class ST7789font(ST7789):
         bfg=bytes([ (fg >> 8) & 0xff, fg & 0xff ] )
         bbg=bytes([ (bg >> 8) & 0xff, bg & 0xff ] )
         for char_y in range(self._font_height+1):
-            for char_x in range(self._font_width+1):
-                line=  0 if char_x >= self._font_width else int(self._fontdata[((ord(ch) * self._font_width) + char_x)])
-                if self.pixmode:
-                    self.pixel(x+char_x,y+char_y, fg if (line >> char_y) & 0x1 else bg)    
-                elif (line >> char_y) & 0x1:
-                    #linebuf[cnt:(cnt+1)]  = bfg
-                    linebuf[cnt]=bfg[0]
-                    linebuf[cnt+1]=bfg[1] 
-                else:
-                    #linebuf[cnt:(cnt+1)]  = bbg
-                    linebuf[cnt]=bbg[0]
-                    linebuf[cnt+1]=bbg[1] 
-                cnt += 2
+            for rpy in range(scale):
+                for char_x in range(self._font_width+1):
+                    for rpx in range(scale):
+                        line=  0 if char_x >= self._font_width else int(self._fontdata[((ord(ch) * self._font_width) + char_x)])
+                        if self.pixmode:
+                            self.pixel(x+char_x,y+char_y, fg if (line >> char_y) & 0x1 else bg)    
+                        elif (line >> char_y) & 0x1:
+                            #linebuf[cnt:(cnt+1)]  = bfg
+                            linebuf[cnt]=bfg[0]
+                            linebuf[cnt+1]=bfg[1] 
+                        else:
+                            #linebuf[cnt:(cnt+1)]  = bbg
+                            linebuf[cnt]=bbg[0]
+                            linebuf[cnt+1]=bbg[1] 
+                        cnt += 2
         if not self.pixmode:        
-            self.blit_buffer(memoryview(linebuf), x, y, self._font_width+1, self._font_height+1)
+            self.blit_buffer(memoryview(linebuf), x, y, (self._font_width+1)*scale, (self._font_height+1)*scale)
         
     def showimg(self,fn,x=0,y=0):
         with open(fn,"rb") as f:
@@ -408,19 +411,19 @@ class ST7789font(ST7789):
               buf=f.read(sx*2)
               self.blit_buffer(buf, x, y+cnt, sx, 1)
         
-    def writestring(self,stri,x=-1,y=-1,fg=WHITE,bg=BLACK,updatecursor=True):
+    def writestring(self,stri,x=-1,y=-1,fg=WHITE,bg=BLACK,updatecursor=True,scale=1):
         if x < 0 or y < 0:
             x=self.cursx
             y=self.cursy
         for ch in stri:
-            if x + self._font_width > self.width:
+            if x + (self._font_width*scale) > self.width:
                 x=0
-                y += self._font_height+1
-            if y + self._font_height > self.height:
+                y += (self._font_height*scale)+1
+            if y + (self._font_height*scale) > self.height:
                 y=0
                 x=0  
-            self.writechar(ch,x,y,fg,bg)
-            x += self._font_width +1
+            self.writechar(ch,x,y,fg,bg, scale)
+            x += (self._font_width*scale) +1
         if updatecursor:
             self.cursx=x
             self.cursy=y
