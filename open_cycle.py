@@ -1,7 +1,8 @@
 from bt_csc import BLECSCCentral, run_CSC
 from machine import Pin, I2C
 import ssd1306
-from display import DebugOled, OCOled, DebugTdisp
+from oleddisplay import DebugOled, OCOled
+from tdisplay import DebugTdisp
 
 MS_IN_MIN = 61440 # Note "ms" here is actually 1/1024 second per Bluetooth spec
 SHORT_SIZE = 65536 
