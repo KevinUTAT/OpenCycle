@@ -2,7 +2,7 @@ from bt_csc import BLECSCCentral, run_CSC
 from machine import Pin, I2C
 import ssd1306
 from oleddisplay import DebugOled, OCOled
-from tdisplay import DebugTdisp
+from tdisplay import DebugTdisp, ColorTdisp
 
 MS_IN_MIN = 61440 # Note "ms" here is actually 1/1024 second per Bluetooth spec
 SHORT_SIZE = 65536 
@@ -16,7 +16,8 @@ KPH2MMPM = 16667 # km/h to mm/min
 # Choose your display here =====================
 # oled_diplay = DebugOled(5, 4)
 # oled_diplay = OCOled(5, 4)
-oled_diplay = DebugTdisp()
+# oled_diplay = DebugTdisp()
+oled_diplay = ColorTdisp()
 # ==============================================
 
 wheelRev = 0
