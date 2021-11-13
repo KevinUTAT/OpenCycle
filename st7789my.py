@@ -4,6 +4,7 @@
 import time
 from micropython import const
 import ustruct as struct
+import math
 
 # commands
 ST77XX_NOP = const(0x00)
@@ -322,6 +323,27 @@ class ST77xx:
                 err += dx
             x0 += 1
 
+    def circle(self, c_x, c_y, r, color=WHITE):
+        # arc drawing func using Bresenham's circle method
+        switch = 3 - (2 * r)
+        x = 0
+        y = r
+        # first quarter/octant starts clockwise at 12 o'clock
+        while x <= y:
+            self.pixel(c_x+x, c_y-y, color)
+            self.pixel(c_x+y, c_y-x, color)
+            self.pixel(c_x+y, c_y+x, color)
+            self.pixel(c_x+x, c_y+y, color)
+            self.pixel(c_x-x, c_y+y, color)
+            self.pixel(c_x-y, c_y+x, color)
+            self.pixel(c_x-y, c_y-x, color)
+            self.pixel(c_x-x, c_y-y, color)
+            if switch < 0:
+                switch = switch + (4 * x) + 6
+            else:
+                switch = switch + (4 * (x - y)) + 10
+                y = y - 1
+            x = x + 1
 
 
 class ST7789(ST77xx):
