@@ -63,6 +63,8 @@ def on_receive_CSC(csc_data):
         lastUpdate = csc_data[2]
         return
     rev = csc_data[1] - wheelRev
+    if rev < 0:
+        return
     rev_count += rev
     # handles wraparound
     if lastUpdate > csc_data[2]:
