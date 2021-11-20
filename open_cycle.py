@@ -63,9 +63,12 @@ def on_receive_CSC(csc_data):
         lastUpdate = csc_data[2]
         return
     rev = csc_data[1] - wheelRev
+    # rejecting glitchy data
     if rev < 0:
         return
-    rev_count += rev
+    elif rev > 100:
+        return
+    
     # handles wraparound
     if lastUpdate > csc_data[2]:
         dt = csc_data[2] + SHORT_SIZE - lastUpdate
@@ -77,6 +80,10 @@ def on_receive_CSC(csc_data):
         rpm = (rev / dt) * MS_IN_MIN
         
     speed = (rpm * WHEEL_CIRC) / KPH2MMPM
+    if speed > 120:
+        return
+
+    rev_count += rev
     dist = (rev_count * WHEEL_CIRC) / 1000000
     
     # update global vars
