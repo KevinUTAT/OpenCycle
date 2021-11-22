@@ -40,6 +40,12 @@ static void notifyCallback(
       wheel_rev = wheel_rev_temp;
       last_wheel_time = last_wheel_time_temp;
     }
+    else if (prev_wheel_rev == 0 && prev_wheel_time == 0) {
+      wheel_rev = wheel_rev_temp;
+      last_wheel_time = last_wheel_time_temp;
+      prev_wheel_time = last_wheel_time;
+      prev_wheel_rev = wheel_rev;
+    }
 
     Serial.print(wheel_rev);
     Serial.print(", ");
