@@ -17,7 +17,7 @@ lv_obj_t * time_label = nullptr;
 lv_obj_t * speed_label = nullptr;
 lv_obj_t * dist_label = nullptr;
 
-static unsigned rev_count = 0;
+static unsigned start_rev = 0;
 
 LV_FONT_DECLARE(morgnite_bold_64);
 LV_FONT_DECLARE(oswald_regular_24);
@@ -32,6 +32,7 @@ void setup() {
     rtc->check();
 
     watch->openBL();
+    watch->bl->adjust(100);
     watch->tft->setRotation(1);
     watch->power->adc1Enable(AXP202_VBUS_VOL_ADC1 | 
       AXP202_VBUS_CUR_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_BATT_VOL_ADC1, true);
@@ -41,6 +42,7 @@ void setup() {
     create_instruments();
 
     setup_ble_csc();
+    setCpuFrequencyMhz(60);
 }
 
 void loop() {
@@ -160,8 +162,10 @@ void run_instruments() {
             if ((d_time > 0) && (d_rev < 100) && (d_rev > 0)) {
                 float cur_rpm = ((float)d_rev / (float)d_time) * 61440.0;
                 float cur_speed = (cur_rpm * 2155.0) / 16667.0;
-                rev_count += d_rev;
-                float distance = ((float)rev_count * 2155.0) / 1000000.0;
+                if (start_rev == 0){
+                    start_rev = wheel_rev;
+                }
+                float distance = ((float)(wheel_rev - start_rev) * 2155.0) / 1000000.0;
                 Serial.println(cur_speed);
                 Serial.println(distance);
                 Serial.println(d_rev);
