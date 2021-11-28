@@ -1,5 +1,6 @@
 #include "config.h"
 #include "ble_csc.h"
+#include "sdlogger.h"
 
 typedef struct {
     lv_obj_t *hour;
@@ -10,6 +11,7 @@ typedef struct {
 static str_datetime_t g_data;
 TTGOClass *watch = nullptr;
 PCF8563_Class *rtc;
+SDLogger main_logger;
 
 lv_obj_t * batV_label = nullptr;
 lv_obj_t * rev_label = nullptr;
@@ -30,6 +32,9 @@ void setup() {
     rtc = watch->rtc;
     // Use compile time
     rtc->check();
+
+    main_logger.init(watch);
+    main_logger.startNewLog();
 
     watch->openBL();
     watch->bl->adjust(100);
@@ -151,6 +156,12 @@ void run_instruments() {
     lv_task_create([](lv_task_t *t) {
         if ((prev_wheel_time == 0) && (prev_wheel_rev == 0)) {}// do nothing
         else {
+            main_logger.start();
+            main_logger.log(String(wheel_rev).c_str());
+            main_logger.log(",");
+            main_logger.log(String(last_wheel_time).c_str());
+            main_logger.log("\n");
+            main_logger.finish();
             int d_rev = wheel_rev - prev_wheel_rev;
             int d_time = 0;
             if (last_wheel_time >= prev_wheel_time) {
