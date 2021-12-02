@@ -6,6 +6,7 @@
 #include "Arduino.h"
 
 
+extern boolean connected;
 extern unsigned wheel_rev;
 extern unsigned last_wheel_time;
 extern unsigned prev_wheel_time;

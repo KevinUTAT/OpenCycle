@@ -6,14 +6,17 @@ SDLogger::SDLogger() {}
 
 int SDLogger::init(TTGOClass *watch_ptr) {
     watch_ptr = watch_ptr;
-    while (1) {
+    for (int i=0; i < 10; i++) {
         if (watch_ptr->sdcard_begin()) {
             Serial.println("sd begin pass");
+            no_sd = false;
             break;
         }
         Serial.println("sd begin fail,wait 1 sec");
-        delay(1000);
+        delay(500);
     }
+    if (no_sd) return 1;
+
     uint8_t cardType = SD.cardType();
 
     if (cardType == CARD_NONE) {
@@ -38,6 +41,8 @@ int SDLogger::init(TTGOClass *watch_ptr) {
 
 
 int SDLogger::startNewLog() {
+    if (no_sd) return 1;
+
     char* log_name = "/log.csv";
     log_file = SD.open(log_name, FILE_WRITE);
     if(!log_file){
@@ -51,6 +56,8 @@ int SDLogger::startNewLog() {
 
 
 int SDLogger::log(const char* msg) {
+    if (no_sd) return 1;
+
     if (log_started) {
         if (log_file.print(msg)) {
             return 0;
@@ -73,6 +80,8 @@ int SDLogger::log(const char* msg) {
 
 
 int SDLogger::start() {
+    if (no_sd) return 1;
+
     char* log_name = "/log.csv";
     log_file = SD.open(log_name, FILE_APPEND);
     if(!log_file){
@@ -85,6 +94,8 @@ int SDLogger::start() {
 
 
 void SDLogger::finish() {
+    if (no_sd) return;
+
     log_file.close();
     log_started = false;
 }

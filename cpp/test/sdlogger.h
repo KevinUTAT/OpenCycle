@@ -5,6 +5,7 @@
 
 class SDLogger {
     private:
+    bool no_sd = true;
     TTGOClass *watch_ptr;
     File log_file;
     bool log_started = false;

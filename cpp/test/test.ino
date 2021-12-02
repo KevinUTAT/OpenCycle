@@ -13,7 +13,9 @@ TTGOClass *watch = nullptr;
 PCF8563_Class *rtc;
 SDLogger main_logger;
 
+lv_obj_t * bat_label = nullptr;
 lv_obj_t * batV_label = nullptr;
+char status_str[16];
 lv_obj_t * rev_label = nullptr;
 lv_obj_t * time_label = nullptr;
 lv_obj_t * speed_label = nullptr;
@@ -37,7 +39,7 @@ void setup() {
     main_logger.startNewLog();
 
     watch->openBL();
-    watch->bl->adjust(100);
+    watch->setBrightness(128);
     watch->tft->setRotation(1);
     watch->power->adc1Enable(AXP202_VBUS_VOL_ADC1 | 
       AXP202_VBUS_CUR_ADC1 | AXP202_BATT_CUR_ADC1 | AXP202_BATT_VOL_ADC1, true);
@@ -73,7 +75,7 @@ void create_status_bar()
     static lv_style_t icon_style;
     lv_style_init(&icon_style);
     lv_style_set_text_color(&icon_style, LV_STATE_DEFAULT, LV_COLOR_WHITE);
-    lv_style_set_text_font(&icon_style, LV_STATE_DEFAULT, &lv_font_montserrat_28);
+    lv_style_set_text_font(&icon_style, LV_STATE_DEFAULT, &lv_font_montserrat_20);
 
     static lv_style_t bat_style;
     lv_style_init(&bat_style);
@@ -93,20 +95,41 @@ void create_status_bar()
     lv_obj_align(logo_label, nullptr, LV_ALIGN_IN_TOP_LEFT, 5, 5);
 
     // battery
-    lv_obj_t * bat_label = lv_label_create(lv_scr_act(), NULL);
-    lv_obj_add_style(bat_label, LV_OBJ_PART_MAIN, &icon_style);
-    lv_label_set_text(bat_label, LV_SYMBOL_BATTERY_FULL);
-    lv_obj_align(bat_label, nullptr, LV_ALIGN_IN_TOP_RIGHT, -5, 2);
+    sprintf(status_str, "%s%d", LV_SYMBOL_BATTERY_FULL, 99);
 
-    batV_label = lv_label_create(lv_scr_act(), NULL);
-    lv_obj_add_style(batV_label, LV_OBJ_PART_MAIN, &bat_style);
-    lv_label_set_text(batV_label, "99");
-    lv_obj_align(batV_label, nullptr, LV_ALIGN_IN_TOP_RIGHT, -15, 10);
+    bat_label = lv_label_create(lv_scr_act(), NULL);
+    lv_obj_add_style(bat_label, LV_OBJ_PART_MAIN, &icon_style);
+    lv_label_set_text(bat_label, status_str);
+    lv_obj_align(bat_label, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 7);
+
+    // batV_label = lv_label_create(lv_scr_act(), NULL);
+    // lv_obj_add_style(batV_label, LV_OBJ_PART_MAIN, &bat_style);
+    // lv_label_set_text(batV_label, "99");
+    // lv_obj_align(batV_label, nullptr, LV_ALIGN_IN_TOP_RIGHT, -15, 10);
 
     lv_task_create([](lv_task_t *t) {
-        lv_label_set_text_fmt(batV_label, "%02u", watch->power->getBattPercentage());
+        run_status_bar();
     }, 1000, LV_TASK_PRIO_MID, nullptr);
+}
 
+
+void run_status_bar() {
+    // lv_label_set_text_fmt(batV_label, "%02u", watch->power->getBattPercentage());
+    int batPercent = watch->power->getBattPercentage();
+    char* batIcon;
+    if (batPercent > 85) batIcon = LV_SYMBOL_BATTERY_FULL;
+    else if (batPercent > 65) batIcon = LV_SYMBOL_BATTERY_3;
+    else if (batPercent > 45) batIcon = LV_SYMBOL_BATTERY_2;
+    else if (batPercent > 15) batIcon = LV_SYMBOL_BATTERY_1;
+    else batIcon = LV_SYMBOL_BATTERY_EMPTY;
+
+    char* bleIcon;
+    if (connected) bleIcon = LV_SYMBOL_BLUETOOTH;
+    else bleIcon = "";
+
+    sprintf(status_str, "%s%s%d", bleIcon, batIcon, batPercent);
+    lv_label_set_text(bat_label, status_str);
+    lv_obj_align(bat_label, nullptr, LV_ALIGN_IN_TOP_RIGHT, 0, 7);
 }
 
 
@@ -170,7 +193,7 @@ void run_instruments() {
             else {
                 d_time = last_wheel_time + 65536 - prev_wheel_time;
             }
-            if ((d_time > 0) && (d_rev < 100) && (d_rev > 0)) {
+            if ((d_time > 0) && (d_rev < 100) && (d_rev >= 0)) {
                 float cur_rpm = ((float)d_rev / (float)d_time) * 61440.0;
                 float cur_speed = (cur_rpm * 2155.0) / 16667.0;
                 if (start_rev == 0){
@@ -185,6 +208,6 @@ void run_instruments() {
                 lv_label_set_text_fmt(dist_label, "%.02f", distance);
             }
         }
-    }, 1000, LV_TASK_PRIO_MID, nullptr);
+    }, 250, LV_TASK_PRIO_MID, nullptr);
 }
 
