@@ -29,9 +29,16 @@ static void notifyCallback(
     Serial.println(length);
     Serial.print("data: ");
 
-    
-    unsigned wheel_rev_temp = (pData[4] << 24) | (pData[3] << 16) | (pData[2] << 8) | pData[1];
-    unsigned last_wheel_time_temp = (pData[6] << 8) | pData[5];
+    unsigned wheel_rev_temp;
+    unsigned last_wheel_time_temp;
+    if (length >= 7) {
+      wheel_rev_temp = (pData[4] << 24) | (pData[3] << 16) | (pData[2] << 8) | pData[1];
+      last_wheel_time_temp = (pData[6] << 8) | pData[5];
+    }
+    else {
+      wheel_rev_temp = (pData[2] << 8) | pData[1];
+      last_wheel_time_temp = (pData[4] << 8) | pData[3];
+    }
 
     if ( ((wheel_rev_temp - prev_wheel_rev) < 100) &&
           (wheel_rev_temp >= prev_wheel_rev)) {
@@ -175,7 +182,7 @@ void run_ble_csc() {
     Serial.println("Setting new characteristic value to \"" + newValue + "\"");
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
-    pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
+    // pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
   }else if(doScan){
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
   }

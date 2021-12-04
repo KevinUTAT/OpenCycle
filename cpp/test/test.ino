@@ -208,6 +208,6 @@ void run_instruments() {
                 lv_label_set_text_fmt(dist_label, "%.02f", distance);
             }
         }
-    }, 250, LV_TASK_PRIO_MID, nullptr);
+    }, 1000, LV_TASK_PRIO_HIGH, nullptr);
 }
 
