@@ -1,3 +1,6 @@
+#ifndef SDLOGGER_H
+#define SDLOGGER_H
+
 #include "config.h"
 #include "FS.h"
 #include "SD.h"
@@ -19,3 +22,5 @@ class SDLogger {
     int start();
     void finish();
 };
+
+#endif
