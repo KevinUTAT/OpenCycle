@@ -20,6 +20,7 @@ lv_obj_t * rev_label = nullptr;
 lv_obj_t * time_label = nullptr;
 lv_obj_t * speed_label = nullptr;
 lv_obj_t * dist_label = nullptr;
+lv_obj_t * speed_arc = nullptr;
 
 static unsigned start_rev = 0;
 
@@ -46,7 +47,8 @@ void setup() {
 
 
     create_status_bar();
-    create_instruments();
+    // create_instruments();
+    create_instrument_gauges();
 
     setup_ble_csc();
     setCpuFrequencyMhz(60);
@@ -206,3 +208,77 @@ void run_instruments(lv_task_t * task) {
     }
 }
 
+
+void create_instrument_gauges() {
+    // styles:
+    static lv_style_t gauge_style;
+    lv_style_init(&gauge_style);
+    lv_style_set_border_width(&gauge_style, LV_STATE_DEFAULT, 0);
+
+    static lv_style_t speed_data_style;
+    lv_style_init(&speed_data_style);
+    lv_style_set_text_color(&speed_data_style, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    lv_style_set_text_font(&speed_data_style, LV_STATE_DEFAULT, &morgnite_bold_64);
+
+    static lv_style_t dist_data_style;
+    lv_style_init(&dist_data_style);
+    lv_style_set_text_color(&dist_data_style, LV_STATE_DEFAULT, LV_COLOR_BLACK);
+    lv_style_set_text_font(&dist_data_style, LV_STATE_DEFAULT, &oswald_regular_24);
+
+    // layouts:
+    speed_arc = lv_arc_create(lv_scr_act(), NULL);
+    lv_obj_add_style(speed_arc, LV_OBJ_PART_MAIN, &gauge_style);
+    lv_obj_set_size(speed_arc, 206, 206);
+    lv_arc_set_rotation(speed_arc, 135);
+    lv_arc_set_bg_angles(speed_arc, 0, 270);
+    lv_arc_set_value(speed_arc, 40);
+    lv_obj_align(speed_arc, nullptr, LV_ALIGN_CENTER, 0, 17);
+
+    speed_label = lv_label_create(lv_scr_act(), NULL);
+    lv_obj_add_style(speed_label, LV_OBJ_PART_MAIN, &speed_data_style);
+    lv_label_set_text(speed_label, "------");
+    lv_obj_align(speed_label, nullptr, LV_ALIGN_CENTER, 0, 17);
+
+    dist_label = lv_label_create(lv_scr_act(), NULL);
+    lv_obj_add_style(dist_label, LV_OBJ_PART_MAIN, &dist_data_style);
+    lv_label_set_text(dist_label, "------");
+    lv_obj_align(dist_label, nullptr, LV_ALIGN_CENTER, 0, 72);
+
+    lv_task_create(run_instrument_gauges, 250, LV_TASK_PRIO_MID, nullptr);
+}
+
+
+void run_instrument_gauges(lv_task_t * task) {
+    if ((prev_wheel_time == 0) && (prev_wheel_rev == 0)) {}// do nothing
+    else {
+        main_logger.start();
+        main_logger.log(String(wheel_rev).c_str());
+        main_logger.log(",");
+        main_logger.log(String(last_wheel_time).c_str());
+        main_logger.log("\n");
+        main_logger.finish();
+        int d_rev = wheel_rev - prev_wheel_rev;
+        int d_time = 0;
+        if (last_wheel_time >= prev_wheel_time) {
+            d_time = last_wheel_time - prev_wheel_time;
+        }
+        else {
+            d_time = last_wheel_time + 65536 - prev_wheel_time;
+        }
+        if ((d_time > 0) && (d_rev < 100) && (d_rev >= 0)) {
+            float cur_rpm = ((float)d_rev / (float)d_time) * 61440.0;
+            float cur_speed = (cur_rpm * 2155.0) / 16667.0;
+            if (start_rev == 0){
+                start_rev = wheel_rev;
+            }
+            float distance = ((float)(wheel_rev - start_rev) * 2155.0) / 1000000.0;
+            Serial.println(cur_speed);
+            Serial.println(distance);
+            Serial.println(d_rev);
+            Serial.println(d_time);
+            lv_label_set_text_fmt(speed_label, "%.02f", cur_speed);
+            lv_label_set_text_fmt(dist_label, "%.02f", distance);
+            lv_arc_set_value(speed_arc, (int)(cur_speed / 60));
+        }
+    }
+}
