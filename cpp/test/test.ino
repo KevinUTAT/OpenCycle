@@ -278,7 +278,7 @@ void run_instrument_gauges(lv_task_t * task) {
             Serial.println(d_time);
             lv_label_set_text_fmt(speed_label, "%.02f", cur_speed);
             lv_label_set_text_fmt(dist_label, "%.02f", distance);
-            lv_arc_set_value(speed_arc, (int)(cur_speed / 60));
+            lv_arc_set_value(speed_arc, (int)(cur_speed / 60) * 100);
         }
     }
 }
