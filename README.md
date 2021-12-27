@@ -1,9 +1,9 @@
 # What is this?
 This project is to create a fully open sourced cycling computer based on micro-controller hardwares such as ESP32 and Pi Pico. \
 This project is still a working progress and are at a very early stage so please forgive me for the current state.
-|        Oled debug       |        Oled Normal      |        T-Display        |
-|:-----------------------:|:-----------------------:|:-----------------------:|
-|![](resource/screen1.png)|![](resource/screen2.png)|![](resource/screen3.png)|
+|        Oled debug       |        Oled Normal      |        T-Display        |         T-Watch         |
+|:-----------------------:|:-----------------------:|:-----------------------:|:-----------------------:|
+|![](resource/screen1.png)|![](resource/screen2.png)|![](resource/screen3.png)|![](resource/screen4.png)|
 # Why Open Cycle?
 Similar project exist on ARM-Linux platforms but I want something that can be run on very miniature hardware while still maintain good battery life. \
 One of the goal for this project is to create a software platform to make it easier to make your own cycling computer with your choices of hardware and interface.\
@@ -58,6 +58,8 @@ show_csc(self, speed, distance, rpm, raw)
 My current focus is on exploring the capability of the TTGO T-Watches. Due to the manufacture library support, I am redoing everything in Arduino/C++.\
 If you are interested, give it a try (look under *cpp/test*). Make sure you have ESP32 arduino core 1.0.6 and  *TTGO TWatch Library* installed.
 # Change log:
+### 2021-12-27:
+Finishing the first working version of display for T-Watch. Checkout under */cpp*
 ### 2021-11-13:
 Adding support for the TTGO T-Display as its a very nice piece of hardware.
 - Modifying the [st7789my](https://gitlab.com/pascalokm/t-watch2020-esp32-with-micropython/-/blob/master/st7789my.py) to enable text scaling and draw circle
